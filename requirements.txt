@@ -7,7 +7,7 @@ scikit-learn
 catboost
 xgboost
 dill
-Flask
+flask
 altair==4.2.2
 streamlit>=1.23.0
 
