@@ -23,7 +23,7 @@ if 'error_message' not in st.session_state:
     st.session_state.error_message = None
 
 # ===== HEADER =====
-st.title("🎓 Student Performance Predictor")
+st.title("Student Performance Predictor")
 st.markdown("Predict math scores based on student attributes (Reading/Writing scores must be 0-100)")
 
 # ===== INPUT FORM =====
@@ -84,7 +84,7 @@ if submitted:
     
     # Validation: Only check categorical fields (scores are enforced by widget)
     if not all([gender, ethnicity, parental_edu, lunch, test_prep]):
-        st.session_state.error_message = "⚠️ Please select values for all dropdown fields"
+        st.session_state.error_message = "Please select values for all dropdown fields"
         st.session_state.prediction_result = None
     else:
         try:
@@ -107,7 +107,7 @@ if submitted:
             st.session_state.error_message = None
             
         except Exception as e:
-            st.session_state.error_message = f"⚠️ Prediction error: {str(e)}"
+            st.session_state.error_message = f"Prediction error: {str(e)}"
             st.session_state.prediction_result = None
 
 # ===== DISPLAY RESULTS =====
@@ -119,20 +119,20 @@ if st.session_state.prediction_result is not None:
     score = st.session_state.prediction_result
     if score >= 90:
         st.balloons()
-        st.success(f"🎯 Exceptional! Predicted Math Score: **{score:.1f}**")
+        st.success(f"Exceptional! Predicted Math Score: **{score:.1f}**")
     elif score >= 70:
-        st.success(f"✅ Strong Performance! Predicted Math Score: **{score:.1f}**")
+        st.success(f"Strong Performance! Predicted Math Score: **{score:.1f}**")
     elif score >= 50:
-        st.warning(f"💡 Room for Growth! Predicted Math Score: **{score:.1f}**")
+        st.warning(f"Room for Growth! Predicted Math Score: **{score:.1f}**")
     else:
-        st.error(f"⚠️ Needs Attention! Predicted Math Score: **{score:.1f}**")
+        st.error(f"Needs Attention! Predicted Math Score: **{score:.1f}**")
     
     # Input summary
-    with st.expander("📋 View Input Summary"):
+    with st.expander("View Input Summary"):
         summary = st.session_state.form_data.copy()
         summary['predicted_math_score'] = f"{score:.1f}"
         st.json(summary)
 
 # ===== FOOTER =====
 st.markdown("---")
-st.caption("ℹ️ Scores are restricted to 0-100 integers • Model trained on student performance dataset • Powered by Streamlit")
+st.caption("Scores are restricted to 0-100 integers • Model trained on student performance dataset • Powered by Streamlit")
