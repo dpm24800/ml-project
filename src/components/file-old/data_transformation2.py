@@ -16,7 +16,7 @@ from src.utils import save_object
 
 @dataclass
 class DataTransformationConfig:
-    preprocessor_obj_file_path: str = os.path.join('artifacts', "preprocessor.pkl")
+    preprocessor_obj_file_path = os.path.join('artifacts', "preprocessor.pkl")
 
 class DataTransformation:
     def __init__(self):
@@ -43,8 +43,8 @@ class DataTransformation:
             cat_pipeline = Pipeline(
                 steps=[
                     ("imputer", SimpleImputer(strategy="most_frequent")),
-                    ("one_hot_encoder", OneHotEncoder(handle_unknown='ignore', sparse_output=False)),
-                    ("scaler", StandardScaler(with_mean=False))
+                    ("one_hot_encoder", OneHotEncoder(handle_unknown='ignore', sparse_output=False)),  # FIXED: instantiated + dense output
+                    ("scaler", StandardScaler(with_mean=False))  # FIXED: avoid error with sparse-like data
                 ]
             )
 
@@ -54,7 +54,7 @@ class DataTransformation:
             preprocessor = ColumnTransformer(
                 transformers=[
                     ("num_pipeline", num_pipeline, numerical_columns),
-                    ("cat_pipeline", cat_pipeline, categorical_features)
+                    ("cat_pipeline", cat_pipeline, categorical_features)  # FIXED: typo "cat_pipelines" → "cat_pipeline"
                 ]
             )
 
@@ -62,7 +62,6 @@ class DataTransformation:
         except Exception as e:
             raise CustomException(e, sys)
         
-    # src/components/data_transformation.py (partial update inside initiate_data_transformation)
     def initiate_data_transformation(self, train_path, test_path):
         try:
             train_df = pd.read_csv(train_path)
@@ -73,9 +72,9 @@ class DataTransformation:
 
             preprocessing_obj = self.get_data_transformer_object()
 
-            target_column_name = "math_score"  # Now valid after renaming in ingestion
+            target_column_name = "math_score"
 
-            # ✅ FIXED: Removed invalid 'axis=1' parameter
+            # FIXED: Removed invalid 'axis=1' parameter when using 'columns='
             input_features_train_df = train_df.drop(columns=[target_column_name])
             target_feature_train_df = train_df[target_column_name]
 
@@ -84,9 +83,9 @@ class DataTransformation:
             
             logging.info("Applying preprocessing object on training and testing dataframes.")
 
-            # ✅ CRITICAL FIX: fit_transform on train ONLY, transform on test
+            # FIXED: fit_transform on train, transform on test (not fit_transform again on train!)
             input_feature_train_arr = preprocessing_obj.fit_transform(input_features_train_df)
-            input_feature_test_arr = preprocessing_obj.transform(input_features_test_df)
+            input_feature_test_arr = preprocessing_obj.transform(input_features_test_df)  # CRITICAL FIX
 
             train_arr = np.c_[input_feature_train_arr, np.array(target_feature_train_df)]
             test_arr = np.c_[input_feature_test_arr, np.array(target_feature_test_df)]
