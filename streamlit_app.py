@@ -67,7 +67,7 @@ with st.form("prediction_form"):
             help="Enter integer score between 0 and 100"
         )
     
-    submitted = st.form_submit_button("🔮 Predict Math Score", type="primary")
+    submitted = st.form_submit_button("Predict Math Score", type="primary")
 
 # ===== PREDICTION LOGIC =====
 if submitted:
