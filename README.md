@@ -145,7 +145,8 @@ Distributed under the MIT License. See [LICENSE](LICENSE) for details.
 ## Contact
 
 Dipak Pulami Magar – [@dpm24800](https://github.com/dpm24800)  
-Project Link: [https://github.com/dpm24800/ml-project](https://github.com/dpm24800/e2e-ml-project)
+Project Link: [https://github.com/dpm24800/e2e-ml-project](https://github.com/dpm24800/e2e-ml-project)
+
 
 
 
