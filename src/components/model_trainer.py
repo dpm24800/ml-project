@@ -35,6 +35,7 @@ class ModelTrainer:
         try:
             logging.info("Split training and test input data.")
 
+            # Split Feature–target from already prepared NumPy arrays.
             X_train, y_train, X_test, y_test = (
                 train_array[:,:-1],
                 train_array[:,-1],
@@ -42,11 +43,13 @@ class ModelTrainer:
                 test_array[:, -1]
             )
 
+            # Create a dictionary of models
             models = {
                 "Random Forest": RandomForestRegressor(),
                 "Decision Tree": DecisionTreeRegressor(),
                 "Gradient Boosting": GradientBoostingRegressor(),
                 "Linear Regression": LinearRegression(),
+
                 "K-Neighbors Regressor": KNeighborsRegressor(),
                 "XGBRegressor": XGBRegressor(),
                 # "CatBoosting Regressor": CatBoostRegressor(verbose=False),
@@ -55,6 +58,7 @@ class ModelTrainer:
                 "AdaBoost Regressor": AdaBoostRegressor()
             }
 
+            # Create a dictionary of hyper-parameters
             params={
                 "Decision Tree": {
                     'criterion':['squared_error', 'friedman_mse', 'absolute_error', 'poisson'],
@@ -104,6 +108,7 @@ class ModelTrainer:
             }
 
             # model_report: dict = evaluate_models(X_train=X_train, y_train=y_train,X_test=X_test, y_test=y_test, models=models)
+
             model_report: dict = evaluate_models(X_train=X_train, y_train=y_train,X_test=X_test, y_test=y_test, models=models, params = params)
 
             # To get best model score from dict
@@ -114,18 +119,23 @@ class ModelTrainer:
                 list(model_report.values()).index(best_model_score)
             ]
 
+            # Pick out the best-performing model object from your models dictionary so you can use it in your pipeline.
             best_model = models[best_model_name]
 
+            # Prevent using a poorly performing model by throwing an error if the best model is below a threshold.
             if best_model_score < 0.6:
                 raise CustomException("No best model found.", sys)
             
             logging.info(f"Best found model on both training and testing dataset.")
 
+            # stores your best-performing model to a file so it can be loaded and used later in production or for inference.
             save_object(
                 file_path = self.model_trainer_config.trained_model_file_path,
                 obj = best_model
             )
 
+            # Predict: Compute outputs from your model for test data.
+            # Evaluate: Measure how accurate those predictions are using R².
             predicted = best_model.predict(X_test)
             r2score = r2_score(y_test, predicted)
 

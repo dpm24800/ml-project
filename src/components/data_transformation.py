@@ -1,9 +1,8 @@
 import os
 import sys
-from dataclasses import dataclass
-
 import numpy as np
 import pandas as pd
+from dataclasses import dataclass
 
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
@@ -24,6 +23,7 @@ class DataTransformation:
 
     def get_data_transformer_object(self):
         try:
+            # List numerical and categrorical features
             numerical_columns = ['writing_score', 'reading_score']
             categorical_features = [
                 'gender',
@@ -33,6 +33,7 @@ class DataTransformation:
                 'test_preparation_course'
             ]
 
+            # Set steps on num_pipeline
             num_pipeline = Pipeline(
                 steps=[
                     ("imputer", SimpleImputer(strategy="median")),
@@ -40,6 +41,7 @@ class DataTransformation:
                 ]
             )
             
+            # Set steps on cat_pipeline
             cat_pipeline = Pipeline(
                 steps=[
                     ("imputer", SimpleImputer(strategy="most_frequent")),
@@ -51,6 +53,7 @@ class DataTransformation:
             logging.info(f"Categorical columns: {categorical_features}")
             logging.info(f"Numerical columns: {numerical_columns}")
 
+            # Combines different preprocessing pipelines for different column types.
             preprocessor = ColumnTransformer(
                 transformers=[
                     ("num_pipeline", num_pipeline, numerical_columns),
@@ -75,7 +78,8 @@ class DataTransformation:
 
             target_column_name = "math_score"  # Now valid after renaming in ingestion
 
-            # ✅ FIXED: Removed invalid 'axis=1' parameter
+            # Seperate input and target features from train and test data frame
+            # - FIXED: Removed invalid 'axis=1' parameter
             input_features_train_df = train_df.drop(columns=[target_column_name])
             target_feature_train_df = train_df[target_column_name]
 
@@ -84,23 +88,48 @@ class DataTransformation:
             
             logging.info("Applying preprocessing object on training and testing dataframes.")
 
-            # ✅ CRITICAL FIX: fit_transform on train ONLY, transform on test
+            '''
+            Fit_transform on train ONLY, transform on test
+            Fits the preprocessing pipeline on training data and transforms it into model-ready numerical features.
+            '''
             input_feature_train_arr = preprocessing_obj.fit_transform(input_features_train_df)
+            
+            # Applies the same preprocessing rules learned from training data to the test data.
             input_feature_test_arr = preprocessing_obj.transform(input_features_test_df)
 
+            '''
+            Horizontally combines features and target into one NumPy array.
+            Appends the target column to the end of the feature matrix.
+            Merges processed training features and target values into one array by adding the target as the last column.
+            '''
             train_arr = np.c_[input_feature_train_arr, np.array(target_feature_train_df)]
+
+            '''
+            Horizontally appends the test target values to the test feature matrix.
+            Combines test features and test labels into one array by adding the target as the last column.
+                
+            Why this is done: 
+            - Store test data as a single array/artifact
+            - Easy to split later for evaluation
+            - Keeps train & test formats identical
+            '''
             test_arr = np.c_[input_feature_test_arr, np.array(target_feature_test_df)]
 
             logging.info("Saved preprocessing object.")
 
+            # Save the trained preprocessing pipeline so the same transformations can be reused during inference.
             save_object(
                 file_path=self.data_transformation_config.preprocessor_obj_file_path,
                 obj=preprocessing_obj
             )
-
+            
+            '''
+            Returns processed data and the path to the saved preprocessor
+            Returns processed training & test data along with the path to the saved preprocessing object.
+            '''
             return (
-                train_arr, 
-                test_arr, 
+                train_arr, # preprocessed training data, with features and target combined.
+                test_arr,  # preprocessed test data, also with features and target combined.
                 self.data_transformation_config.preprocessor_obj_file_path,
             )
         except Exception as e:

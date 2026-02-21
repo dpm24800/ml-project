@@ -54,7 +54,7 @@ def predict_datapoint():
                 writing_score=float(form_data['writing_score'])    # ✅ CORRECT - writing_score from writing_score field
             )
             
-            pred_df = data.get_data_as_data_frame()
+            pred_df = data.get_data_as_dataframe()
             print(pred_df)
             print("Before Prediction")
 

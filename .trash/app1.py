@@ -42,7 +42,7 @@ def predict_datapoint():
         #     writing_score=float(request.form.get('writing_score'))    # ✅ CORRECT
         # )
 
-        # pred_df=data.get_data_as_data_frame()
+        # pred_df=data.get_data_as_dataframe()
         # print(pred_df)
         # print("Before Prediction")
 
@@ -66,7 +66,7 @@ def predict_datapoint():
         # FIX: Use CORRECT score mappings here (see Step 1 above)
         data = CustomData(...)  # With corrected scores
         
-        pred_df = data.get_data_as_data_frame()
+        pred_df = data.get_data_as_dataframe()
         predict_pipeline = PredictPipeline()
         results = predict_pipeline.predict(pred_df)
         

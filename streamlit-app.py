@@ -1,6 +1,7 @@
-import streamlit as st
-import pandas as pd
 import numpy as np
+import pandas as pd
+
+import streamlit as st
 from src.pipeline.predict_pipeline import PredictPipeline, CustomData
 
 # ===== PAGE CONFIG =====
@@ -14,8 +15,8 @@ if 'form_data' not in st.session_state:
         'parental_level_of_education': '',
         'lunch': '',
         'test_preparation_course': '',
-        'writing_score': '',
-        'reading_score': ''
+        'writing_score': 50,  # Default neutral value
+        'reading_score': 50   # Default neutral value
     }
 if 'prediction_result' not in st.session_state:
     st.session_state.prediction_result = None
@@ -23,8 +24,8 @@ if 'error_message' not in st.session_state:
     st.session_state.error_message = None
 
 # ===== HEADER =====
-st.title("🎓 Student Performance Predictor")
-st.markdown("Predict math scores based on student attributes")
+st.title("Student Performance Predictor")
+st.markdown("Predict math scores based on student attributes (Reading/Writing scores must be 0-100)")
 
 # ===== INPUT FORM =====
 with st.form("prediction_form"):
@@ -48,10 +49,26 @@ with st.form("prediction_form"):
                             index=["", "standard", "free/reduced"].index(st.session_state.form_data['lunch']) if st.session_state.form_data['lunch'] else 0)
         test_prep = st.selectbox("Test Prep Course", ["", "none", "completed"],
                                 index=["", "none", "completed"].index(st.session_state.form_data['test_preparation_course']) if st.session_state.form_data['test_preparation_course'] else 0)
-        reading_score = st.text_input("Reading Score", value=st.session_state.form_data['reading_score'])
-        writing_score = st.text_input("Writing Score", value=st.session_state.form_data['writing_score'])
+        
+        # RESTRICTED NUMBER INPUTS WITH VALIDATION
+        reading_score = st.number_input(
+            "Reading Score (0-100)", 
+            min_value=0, 
+            max_value=100, 
+            value=int(st.session_state.form_data['reading_score']),
+            step=1,
+            help="Enter integer score between 0 and 100"
+        )
+        writing_score = st.number_input(
+            "Writing Score (0-100)", 
+            min_value=0, 
+            max_value=100, 
+            value=int(st.session_state.form_data['writing_score']),
+            step=1,
+            help="Enter integer score between 0 and 100"
+        )
     
-    submitted = st.form_submit_button("🔮 Predict Math Score")
+    submitted = st.form_submit_button("Predict Math Score", type="primary")
 
 # ===== PREDICTION LOGIC =====
 if submitted:
@@ -66,41 +83,32 @@ if submitted:
         'reading_score': reading_score
     }
     
-    # Validation
-    if not all([gender, ethnicity, parental_edu, lunch, test_prep, reading_score, writing_score]):
-        st.session_state.error_message = "⚠️ Please fill in all fields"
+    # Validation: Only check categorical fields (scores are enforced by widget)
+    if not all([gender, ethnicity, parental_edu, lunch, test_prep]):
+        st.session_state.error_message = "Please select values for all dropdown fields"
         st.session_state.prediction_result = None
     else:
         try:
-            # Convert scores to float
-            reading = float(reading_score)
-            writing = float(writing_score)
-            
-            # Create prediction data
+            # Create prediction data (scores already validated integers)
             data = CustomData(
                 gender=gender,
                 race_ethnicity=ethnicity,
                 parental_level_of_education=parental_edu,
                 lunch=lunch,
                 test_preparation_course=test_prep,
-                reading_score=reading,
-                writing_score=writing
+                reading_score=float(reading_score),
+                writing_score=float(writing_score)
             )
             
-            pred_df = data.get_data_as_data_frame()
-            st.write("Input data:", pred_df)  # Optional debug
-            
+            pred_df = data.get_data_as_dataframe()
             predict_pipeline = PredictPipeline()
             results = predict_pipeline.predict(pred_df)
             
             st.session_state.prediction_result = results[0]
             st.session_state.error_message = None
             
-        except ValueError:
-            st.session_state.error_message = "⚠️ Reading/Writing scores must be valid numbers"
-            st.session_state.prediction_result = None
         except Exception as e:
-            st.session_state.error_message = f"⚠️ Prediction error: {str(e)}"
+            st.session_state.error_message = f"Prediction error: {str(e)}"
             st.session_state.prediction_result = None
 
 # ===== DISPLAY RESULTS =====
@@ -108,12 +116,24 @@ if st.session_state.error_message:
     st.error(st.session_state.error_message)
 
 if st.session_state.prediction_result is not None:
-    st.success(f"✅ Predicted Math Score: **{st.session_state.prediction_result:.2f}**")
+    # Visual score display
+    score = st.session_state.prediction_result
+    if score >= 90:
+        st.balloons()
+        st.success(f"Exceptional! Predicted Math Score: **{score:.1f}**")
+    elif score >= 70:
+        st.success(f"Strong Performance! Predicted Math Score: **{score:.1f}**")
+    elif score >= 50:
+        st.warning(f"Room for Growth! Predicted Math Score: **{score:.1f}**")
+    else:
+        st.error(f"Needs Attention! Predicted Math Score: **{score:.1f}**")
     
-    # Optional: Show input summary
-    with st.expander("📋 Input Summary"):
-        st.json(st.session_state.form_data)
+    # Input summary
+    with st.expander("View Input Summary"):
+        summary = st.session_state.form_data.copy()
+        summary['predicted_math_score'] = f"{score:.1f}"
+        st.json(summary)
 
 # ===== FOOTER =====
 st.markdown("---")
-st.caption("Powered by Streamlit • Prediction model trained on student performance dataset")
+st.caption("Scores are restricted to 0-100 integers • Model trained on student performance dataset • Powered by Streamlit")

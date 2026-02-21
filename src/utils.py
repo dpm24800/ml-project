@@ -8,7 +8,7 @@ from sklearn.metrics import r2_score
 from sklearn.model_selection import GridSearchCV
 
 from src.exception import CustomException
-# from src.components import ModelTrainer #
+# from src.components import ModelTrainer
 
 # ===== ADD THIS AT THE TOP OF utils.py (after imports) =====
 from sklearn.base import BaseEstimator, RegressorMixin
@@ -87,7 +87,7 @@ def save_object(file_path, obj):
         raise CustomException(e, sys)
 
 # def evaluate_models(X_train, y_train, X_test, y_test, models):
-def evaluate_models(X_train,y_train,X_test,y_test,models,params):
+def evaluate_models(X_train, y_train, X_test, y_test, models, params):
     try:
         report = {}
 
@@ -98,16 +98,27 @@ def evaluate_models(X_train,y_train,X_test,y_test,models,params):
             # gs = GridSearchCV(model,para,cv=cv,n_jobs=n_jobs,verbose=verbose,refit=refit)
             gs = GridSearchCV(model,para,cv=3)
             gs.fit(X_train,y_train)
-
+            
+            '''
+            Take the best hyper-parameters from GridSearch
+            Apply them to your original model object
+            Now model is ready to train (or refit) with the best hyper-parameters.
+            '''
             model.set_params(**gs.best_params_)  # Manual refit (GOOD)
+            
+            # Learn from the training data so the model can predict targets from features.
             model.fit(X_train, y_train) # Train model
             
+            # Predicts targets for the training set
+            # Predicts targets for the test set
             y_train_pred = model.predict(X_train)
             y_test_pred = model.predict(X_test)
 
+            # Evaluates your model on the training data, it tells you how well your model fits the data it has already seen
             train_model_score = r2_score(y_train, y_train_pred)
             test_model_score = r2_score(y_test, y_test_pred)
 
+            # Store the test score of the i-th model in the report dictionary, using the model’s name as the key.
             report[list(models.keys())[i]] = test_model_score
         
         return report
