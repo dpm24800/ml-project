@@ -110,10 +110,10 @@ Trained models and preprocessing artifacts will be saved to the `artifacts/` dir
 
 ## Sample Prediction Interface
 ### Streamlit Preview
-![Streamlit UI Preview](trash/streamlit_preview.png)
+![Streamlit UI Preview](preview/streamlit_preview.png)
 
 ### Flask Preview
-![Flask UI Preview](trash/flask_preview.png)
+![Flask UI Preview](preview/flask_preview.png)
 
 ## Dependencies
 
